@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bug Sender</title>
+    <style>
+        :root {
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --secondary: #075E54;
+            --light: #f0f0f0;
+            --dark: #333;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --success: #2ecc71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 25px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .connected {
+            background-color: var(--success);
+        }
+        
+        .disconnected {
+            background-color: var(--danger);
+        }
+        
+        .connecting {
+            background-color: var(--warning);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-title {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+        
+        .bug-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .bug-option {
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .bug-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+        
+        .bug-option.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.1), rgba(18, 140, 126, 0.1));
+            transform: translateY(-2px);
+        }
+        
+        .bug-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .bug-name {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+        
+        .bug-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), #054a42);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 10px 25px rgba(7, 94, 84, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #e67e22);
+        }
+        
+        .btn-warning:hover {
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.3);
+        }
+        
+        .history {
+            margin-top: 30px;
+        }
+        
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        
+        .history-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-number {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .history-bug {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .delay {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.2));
+            color: var(--warning);
+        }
+        
+        .blank {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.2));
+            color: #2980b9;
+        }
+        
+        .stuck {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2));
+            color: var(--danger);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .success {
+            background: linear-gradient(135deg, var(--success), #27ae60);
+        }
+        
+        .error {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+        }
+        
+        .bot-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .bot-controls .btn {
+            width: 100%;
+        }
+        
+        .pairing-container {
+            text-align: center;
+            margin: 25px 0;
+            display: none;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px dashed #ddd;
+        }
+        
+        .pairing-code {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 3px solid var(--primary);
+            color: var(--secondary);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .pairing-steps {
+            text-align: left;
+            margin: 25px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .pairing-steps ol {
+            margin-left: 20px;
+        }
+        
+        .pairing-steps li {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .bot-status {
+            margin-top: 15px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .server-config {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .config-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .config-input input {
+            flex: 1;
+        }
+        
+        .config-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .bug-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .bot-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .pairing-code {
+                font-size: 24px;
+                letter-spacing: 3px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 WhatsApp Bug Sender</h1>
+            <p class="subtitle">Kirim bug ke nomor WhatsApp tujuan dengan mudah dan cepat</p>
+            <div class="status">
+                <div class="status-indicator disconnected" id="statusIndicator"></div>
+                <span id="statusText">Menunggu Koneksi Server</span>
+            </div>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title">📱 Kirim Bug</h2>
+            <div class="form-group">
+                <label for="phone">Nomor WhatsApp Tujuan</label>
+                <input type="text" id="phone" placeholder="Contoh: 6281234567890 (tanpa +)" maxlength="15">
+            </div>
+            
+            <div class="form-group">
+                <label>Pilih Jenis Bug</label>
+                <div class="bug-options">
+                    <div class="bug-option" data-type="delay">
+                        <div class="bug-icon">⏱️</div>
+                        <div class="bug-name">Delay Invis</div>
+                        <div class="bug-desc">Mengirim pesan tak terlihat dengan delay tertentu</div>
+                    </div>
+                    <div class="bug-option" data-type="blank">
+                        <div class="bug-icon">⬜</div>
+                        <div class="bug-name">Blank Message</div>
+                        <div class="bug-desc">Mengirim pesan kosong ke target</div>
+                    </div>
+                    <div class="bug-option" data-type="stuck">
+                        <div class="bug-icon">📵</div>
+                        <div class="bug-name">Stuck Bug</div>
+                        <div class="bug-desc">Membuat WhatsApp target stuck/error sementara</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="sendBtn" class="btn" disabled>
+                <span class="btn-text">Kirim Bug</span>
+            </button>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">⚙️ Kontrol Bot</h2>
+            <div class="bot-controls">
+                <button id="startBotBtn" class="btn btn-secondary">
+                    <span class="btn-text">🚀 Mulai Bot</span>
+                </button>
+                <button id="stopBotBtn" class="btn btn-warning" disabled>
+                    <span class="btn-text">🛑 Hentikan Bot</span>
+                </button>
+                <button id="restartBotBtn" class="btn btn-secondary" disabled>
+                    <span class="btn-text">🔄 Restart Bot</span>
+                </button>
+            </div>
+            
+            <div class="server-config">
+                <label>Konfigurasi Server</label>
+                <div class="config-input">
+                    <input type="text" id="serverUrl" placeholder="http://localhost:3000" value="http://localhost:3000">
+                    <button id="saveConfigBtn" class="btn btn-secondary" style="width: auto; padding: 0 20px;">
+                        <span class="btn-text">Simpan</span>
+                    </button>
+                </div>
+                <div class="config-info">
+                    💡 Masukkan URL server yang berjalan di Termux (contoh: http://192.168.1.10:3000)
+                </div>
+            </div>
+            
+            <div class="pairing-container" id="pairingContainer">
+                <h3>🔗 Pairing WhatsApp</h3>
+                <p>Gunakan kode berikut untuk menghubungkan bot:</p>
+                <div class="pairing-code" id="pairingCode">- - - - - -</div>
+                <div class="pairing-steps">
+                    <p><strong>📋 Cara menghubungkan:</strong></p>
+                    <ol>
+                        <li>Buka WhatsApp di ponsel Anda</li>
+                        <li>Pergi ke <strong>Settings → Linked Devices → Link a Device</strong></li>
+                        <li>Pilih <strong>Link with phone number</strong></li>
+                        <li>Masukkan kode pairing di atas</li>
+                        <li>Tunggu hingga terhubung (bisa memakan waktu 1-2 menit)</li>
+                    </ol>
+                </div>
+                <div class="bot-status" id="botStatus">Menunggu koneksi...</div>
+            </div>
+        </div>
+        
+        <div class="card history">
+            <h2 class="card-title">📊 Riwayat Pengiriman</h2>
+            <div id="historyList">
+                <div style="text-align: center; color: #666; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📝</div>
+                    <p>Belum ada riwayat pengiriman</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Riwayat akan muncul di sini setelah Anda mengirim bug</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Variabel global
+        let selectedBugType = null;
+        let history = JSON.parse(localStorage.getItem('bugHistory')) || [];
+        let botConnected = false;
+        let botConnecting = false;
+        let pairingCode = null;
+        let serverUrl = localStorage.getItem('serverUrl') || 'http://localhost:3000';
+        
+        // DOM Elements
+        const phoneInput = document.getElementById('phone');
+        const bugOptions = document.querySelectorAll('.bug-option');
+        const sendBtn = document.getElementById('sendBtn');
+        const historyList = document.getElementById('historyList');
+        const notification = document.getElementById('notification');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const startBotBtn = document.getElementById('startBotBtn');
+        const stopBotBtn = document.getElementById('stopBotBtn');
+        const restartBotBtn = document.getElementById('restartBotBtn');
+        const pairingContainer = document.getElementById('pairingContainer');
+        const pairingCodeElement = document.getElementById('pairingCode');
+        const botStatus = document.getElementById('botStatus');
+        const serverUrlInput = document.getElementById('serverUrl');
+        const saveConfigBtn = document.getElementById('saveConfigBtn');
+        
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load server URL dari localStorage
+            serverUrlInput.value = serverUrl;
+            
+            // Event listener untuk pilihan bug
+            bugOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Hapus selected dari semua opsi
+                    bugOptions.forEach(opt => opt.classList.remove('selected'));
+                    // Tambah selected ke opsi yang diklik
+                    this.classList.add('selected');
+                    selectedBugType = this.getAttribute('data-type');
+                });
+            });
+            
+            // Event listener untuk tombol kirim
+            sendBtn.addEventListener('click', sendBug);
+            
+            // Event listener untuk kontrol bot
+            startBotBtn.addEventListener('click', startBot);
+            stopBotBtn.addEventListener('click', stopBot);
+            restartBotBtn.addEventListener('click', restartBot);
+            
+            // Event listener untuk konfigurasi server
+            saveConfigBtn.addEventListener('click', saveServerConfig);
+            
+            // Tampilkan riwayat
+            renderHistory();
+            
+            // Periksa status bot saat halaman dimuat
+            checkBotStatus();
+            
+            // Auto-check status setiap 10 detik
+            setInterval(checkBotStatus, 10000);
+        });
+        
+        // Simpan konfigurasi server
+        function saveServerConfig() {
+            const newUrl = serverUrlInput.value.trim();
+            if (newUrl) {
+                serverUrl = newUrl;
+                localStorage.setItem('serverUrl', serverUrl);
+                showNotification('Konfigurasi server disimpan!', 'success');
+                checkBotStatus(); // Cek status dengan server baru
+            } else {
+                showNotification('Masukkan URL server yang valid!', 'error');
+            }
+        }
+        
+        // Fungsi untuk mengirim bug
+        async function sendBug() {
+            const phone = phoneInput.value.trim();
+            
+            // Validasi input
+            if (!phone) {
+                showNotification('Masukkan nomor WhatsApp tujuan!', 'error');
+                return;
+            }
+            
+            if (!selectedBugType) {
+                showNotification('Pilih jenis bug terlebih dahulu!', 'error');
+                return;
+            }
+            
+            if (!botConnected) {
+                showNotification('Bot WhatsApp belum terhubung!', 'error');
+                return;
+            }
+            
+            // Format nomor (pastikan tanpa + atau 0 di depan)
+            const formattedPhone = formatPhoneNumber(phone);
+            
+            // Tampilkan loading
+            setButtonLoading(sendBtn, true);
+            
+            // Kirim perintah ke bot
+            await sendCommandToBot(formattedPhone, selectedBugType);
+        }
+        
+        // Format nomor telepon
+        function formatPhoneNumber(phone) {
+            // Hapus semua karakter non-digit
+            let cleaned = phone.replace(/\D/g, '');
+            
+            // Jika diawali dengan 0, ganti dengan 62
+            if (cleaned.startsWith('0')) {
+                cleaned = '62' + cleaned.substring(1);
+            }
+            
+            // Jika diawali dengan +, hapus
+            if (cleaned.startsWith('+')) {
+                cleaned = cleaned.substring(1);
+            }
+            
+            return cleaned;
+        }
+        
+        // Tambah ke riwayat
+        function addToHistory(phone, bugType) {
+            const timestamp = new Date().toLocaleString('id-ID');
+            history.unshift({ phone, bugType, timestamp });
+            
+            // Simpan ke localStorage (maksimal 20 item)
+            if (history.length > 20) {
+                history = history.slice(0, 20);
+            }
+            
+            localStorage.setItem('bugHistory', JSON.stringify(history));
+            renderHistory();
+        }
+        
+        // Render riwayat
+        function renderHistory() {
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">📝</div>
+                        <p>Belum ada riwayat pengiriman</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Riwayat akan muncul di sini setelah Anda mengirim bug</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const bugClass = item.bugType === 'delay' ? 'delay' : 
+                                item.bugType === 'blank' ? 'blank' : 'stuck';
+                
+                const bugName = item.bugType === 'delay' ? 'Delay Invis' : 
+                               item.bugType === 'blank' ? 'Blank' : 'Stuck';
+                
+                historyItem.innerHTML = `
+                    <div>
+                        <div class="history-number">${item.phone}</div>
+                        <div style="font-size: 12px; color: #666;">${item.timestamp}</div>
+                    </div>
+                    <div class="history-bug ${bugClass}">${bugName}</div>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+        
+        // Tampilkan notifikasi
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+        
+        // Set button loading state
+        function setButtonLoading(button, isLoading) {
+            const btnText = button.querySelector('.btn-text');
+            if (isLoading) {
+                btnText.innerHTML = `<span class="loading"></span> Memproses...`;
+                button.disabled = true;
+            } else {
+                btnText.textContent = button === sendBtn ? 'Kirim Bug' : 
+                                   button === startBotBtn ? '🚀 Mulai Bot' :
+                                   button === stopBotBtn ? '🛑 Hentikan Bot' : '🔄 Restart Bot';
+                button.disabled = false;
+            }
+        }
+        
+        // ==================== BOT WHATSAPP INTEGRATION ====================
+        
+        // Fungsi untuk memulai bot
+        async function startBot() {
+            if (botConnecting) return;
+            
+            botConnecting = true;
+            updateBotStatus();
+            setButtonLoading(startBotBtn, true);
+            
+            try {
+                // Request pairing code dari server
+                const response = await fetch(`${serverUrl}/bot/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    pairingCode = data.pairingCode;
+                    pairingCodeElement.textContent = pairingCode.match(/.{1,3}/g).join(' ');
+                    pairingContainer.style.display = 'block';
+                    botStatus.textContent = 'Menunggu pairing...';
+                    showNotification('Pairing code berhasil dibuat!', 'success');
+                    
+                    // Polling untuk status koneksi
+                    checkConnectionStatus();
+                } else {
+                    throw new Error(data.message || 'Gagal memulai bot');
+                }
+            } catch (error) {
+                console.error('Error starting bot:', error);
+                showNotification('Gagal memulai bot. Pastikan server berjalan di Termux!', 'error');
+                botConnecting = false;
+                updateBotStatus();
+            } finally {
+                setButtonLoading(startBotBtn, false);
+            }
+        }
+        
+        // Fungsi untuk menghentikan bot
+        async function stopBot() {
+            if (!botConnected) {
+                showNotification('Bot WhatsApp belum terhubung!', 'error');
+                return;
+            }
+            
+            setButtonLoading(stopBotBtn, true);
+            
+            try {
+                const response = await fetch(`${serverUrl}/bot/stop`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    botConnected = false;
+                    botConnecting = false;
+                    pairingContainer.style.display = 'none';
+                    updateBotStatus();
+                    showNotification('Bot WhatsApp berhasil dihentikan!', 'success');
+                } else {
+                    throw new Error(data.message || 'Gagal menghentikan bot');
+                }
+            } catch (error) {
+                console.error('Error stopping bot:', error);
+                showNotification('Gagal menghentikan bot', 'error');
+            } finally {
+                setButtonLoading(stopBotBtn, false);
+            }
+        }
+        
+        // Fungsi untuk restart bot
+        async function restartBot() {
+            if (!botConnected) {
+                showNotification('Bot WhatsApp belum terhubung!', 'error');
+                return;
+            }
+            
+            setButtonLoading(restartBotBtn, true);
+            
+            try {
+                await stopBot();
+                setTimeout(() => {
+                    startBot();
+                }, 2000);
+            } catch (error) {
+                console.error('Error restarting bot:', error);
+                showNotification('Gagal merestart bot', 'error');
+            } finally {
+                setTimeout(() => setButtonLoading(restartBotBtn, false), 3000);
+            }
+        }
+        
+        // Periksa status koneksi
+        async function checkConnectionStatus() {
+            try {
+                const response = await fetch(`${serverUrl}/bot/status`);
+                const data = await response.json();
+                
+                if (data.status === 'connected') {
+                    botConnected = true;
+                    botConnecting = false;
+                    pairingContainer.style.display = 'none';
+                    updateBotStatus();
+                    showNotification('✅ Bot WhatsApp berhasil terhubung!', 'success');
+                } else if (data.status === 'connecting') {
+                    // Masih menunggu, cek lagi dalam 3 detik
+                    setTimeout(checkConnectionStatus, 3000);
+                } else {
+                    // Gagal terhubung
+                    botConnecting = false;
+                    updateBotStatus();
+                    showNotification('❌ Gagal menghubungkan bot', 'error');
+                }
+            } catch (error) {
+                console.error('Error checking connection status:', error);
+                // Coba lagi dalam 3 detik
+                setTimeout(checkConnectionStatus, 3000);
+            }
+        }
+        
+        // Periksa status bot
+        async function checkBotStatus() {
+            try {
+                const response = await fetch(`${serverUrl}/bot/status`);
+                const data = await response.json();
+                
+                if (data.status === 'connected') {
+                    botConnected = true;
+                    botConnecting = false;
+                    pairingContainer.style.display = 'none';
+                } else if (data.status === 'connecting') {
+                    botConnecting = true;
+                    pairingCode = data.pairingCode;
+                    pairingCodeElement.textContent = pairingCode.match(/.{1,3}/g).join(' ');
+                    pairingContainer.style.display = 'block';
+                    botStatus.textContent = 'Menunggu pairing...';
+                    checkConnectionStatus();
+                } else {
+                    botConnected = false;
+                    botConnecting = false;
+                }
+                
+                updateBotStatus();
+            } catch (error) {
+                console.error('Error checking bot status:', error);
+                // Server mungkin belum berjalan, itu normal
+                botConnected = false;
+                botConnecting = false;
+                updateBotStatus();
+            }
+        }
+        
+        // Update status bot di UI
+        function updateBotStatus() {
+            if (botConnected) {
+                statusIndicator.className = 'status-indicator connected';
+                statusText.textContent = 'Bot Terhubung ✅';
+                sendBtn.disabled = false;
+                startBotBtn.disabled = true;
+                stopBotBtn.disabled = false;
+                restartBotBtn.disabled = false;
+            } else if (botConnecting) {
+                statusIndicator.className = 'status-indicator connecting';
+                statusText.textContent = 'Sedang Menghubungkan... 🔄';
+                sendBtn.disabled = true;
+                startBotBtn.disabled = true;
+                stopBotBtn.disabled = true;
+                restartBotBtn.disabled = true;
+            } else {
+                statusIndicator.className = 'status-indicator disconnected';
+                statusText.textContent = 'Bot Terputus ❌';
+                sendBtn.disabled = true;
+                startBotBtn.disabled = false;
+                stopBotBtn.disabled = true;
+                restartBotBtn.disabled = true;
+            }
+        }
+        
+        // Kirim perintah ke bot
+        async function sendCommandToBot(phone, bugType) {
+            try {
+                const response = await fetch(`${serverUrl}/bug/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        bugType: bugType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Simpan ke riwayat
+                    addToHistory(phone, bugType);
+                    showNotification('✅ Bug berhasil dikirim ke ' + phone, 'success');
+                    
+                    // Reset form
+                    phoneInput.value = '';
+                    bugOptions.forEach(opt => opt.classList.remove('selected'));
+                    selectedBugType = null;
+                } else {
+                    showNotification('❌ Gagal mengirim bug: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error sending bug:', error);
+                showNotification('❌ Gagal mengirim bug. Periksa koneksi server!', 'error');
+            } finally {
+                // Reset tombol
+                setButtonLoading(sendBtn, false);
+            }
+        }
+    </script>
+</body>
+</html>
